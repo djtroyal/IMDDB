@@ -1,27 +1,52 @@
-# Movie Cast and Crew Death Analyzer
+# IMDDB — Internet Movie Death Database
 
-This is a Python script that allows users to search for a movie and see the cast and crew members who have passed away, along with their cause of death if available.
-## How to Use
+A visually rich, interactive web application for exploring the mortality statistics of on-screen cast members for any movie.
 
-1. Run the script by executing the command python imddb.py in the terminal.
-2. Enter the name of a movie you want to search for.
-3. The script will display a list of movies that match the search term, along with their release year.
-4. Enter the number of the movie you want to select from the list.
-5. The script will display a list of deceased cast and crew members for the selected movie, along with their birth and death dates and cause of death (if available).
+## Features
 
-## Dependencies
+- **Movie Search** — Search any movie with live autocomplete
+- **Death Statistics** — Median & mean age at death, earliest/most recent death, youngest/oldest death, oldest living cast member, % deceased
+- **Interactive Death Timeline** — Color-coded chronological timeline of deaths, hover for details
+- **Age Distribution Chart** — Bar chart showing decades of death ages
+- **Cast Grid** — All on-screen cast (actors only, no crew) with alive/deceased indicators and filtering
+- **Cast Detail Modal** — Click any cast member for full details including:
+  - Birth and death dates
+  - Cause of death (sourced from Find a Grave)
+  - Final resting place (cemetery + location)
+  - Link to Find a Grave memorial
+- **Dark cinematic UI** — Responsive, mobile-friendly design
 
-This script requires the following Python packages to be installed:
+## Tech Stack
 
-1. requests
-2. bs4 (BeautifulSoup)
+- **Next.js 14** (App Router, TypeScript)
+- **Tailwind CSS** (dark theme)
+- **Recharts** (age distribution bar chart)
+- **Cheerio** (server-side Find a Grave scraping)
+- **TMDB API** (movie data, cast, photos)
+- **Find a Grave** (cause of death, resting place)
 
-## API Keys
+## Setup
 
-This script uses the following API key:
+1. Clone the repo and install dependencies:
+   ```bash
+   npm install
+   ```
 
-1. themoviedb.org API key
+2. Create `.env.local` with your TMDB API key:
+   ```
+   TMDB_API_KEY=your_tmdb_key_here
+   ```
+   Get a free key at [themoviedb.org](https://www.themoviedb.org/settings/api)
 
-## Notes
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
 
-1. If a cast or crew member's birth year is not available, their age at death will be displayed as "N/A".
+## Data Sources
+
+- Movie and cast data: [The Movie Database (TMDB)](https://www.themoviedb.org)
+- Death information: [Find a Grave](https://www.findagrave.com)
+
+This project is not affiliated with IMDb or TMDB.

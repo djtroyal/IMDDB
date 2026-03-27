@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #e8e8f0;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1a25;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3a55;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e6b800;
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1a1a25 25%, #252535 50%, #1a1a25 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Timeline styles */
+.timeline-dot {
+  transition: all 0.2s ease;
+}
+.timeline-dot:hover {
+  transform: scale(1.5);
+  z-index: 10;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(26, 26, 37, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(135deg, #f5c842, #e6b800, #cc9900);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Deceased overlay */
+.deceased-overlay {
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(180, 20, 20, 0.6) 100%
+  );
+}
+
+/* Living overlay */
+.living-overlay {
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(20, 140, 80, 0.6) 100%
+  );
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

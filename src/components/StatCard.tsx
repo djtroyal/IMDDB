@@ -4,6 +4,7 @@ interface StatCardProps {
   subtext?: string;
   icon: React.ReactNode;
   accent?: "gold" | "red" | "green" | "blue";
+  onClick?: () => void;
 }
 
 const accentMap = {
@@ -26,10 +27,15 @@ export default function StatCard({
   subtext,
   icon,
   accent = "gold",
+  onClick,
 }: StatCardProps) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div
-      className={`rounded-xl border p-4 flex flex-col gap-3 animate-slide-up ${accentMap[accent]}`}
+    <Tag
+      onClick={onClick}
+      className={`rounded-xl border p-4 flex flex-col gap-3 animate-slide-up ${accentMap[accent]} ${
+        onClick ? "cursor-pointer hover:brightness-125 hover:border-white/20 transition-all text-left w-full" : ""
+      }`}
     >
       <div className={`w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center ${iconAccentMap[accent]}`}>
         {icon}
@@ -43,6 +49,6 @@ export default function StatCard({
           <div className="text-xs text-white/40 mt-1 line-clamp-1">{subtext}</div>
         )}
       </div>
-    </div>
+    </Tag>
   );
 }

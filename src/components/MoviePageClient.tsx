@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { CastMember, MovieStats } from "@/types";
-import StatsPanel from "@/components/StatsPanel";
+import StatsPanel, { CastFilter } from "@/components/StatsPanel";
 import DeathTimeline from "@/components/DeathTimeline";
 import CastGrid from "@/components/CastGrid";
 import CastDetailModal from "@/components/CastDetailModal";
@@ -15,6 +15,14 @@ interface Props {
 export default function MoviePageClient({ stats, cast, releaseYear }: Props) {
   const [selectedMember, setSelectedMember] = useState<CastMember | null>(null);
   const [ageFilter, setAgeFilter] = useState<{ min: number; max: number } | null>(null);
+  const [castFilter, setCastFilter] = useState<CastFilter>("all");
+
+  function handleSetCastFilter(filter: CastFilter) {
+    setCastFilter(filter);
+    setAgeFilter(null);
+    // Scroll to the cast grid
+    document.getElementById("cast-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <>
@@ -23,6 +31,8 @@ export default function MoviePageClient({ stats, cast, releaseYear }: Props) {
         cast={cast}
         onSelectAgeRange={setAgeFilter}
         selectedAgeRange={ageFilter}
+        onSelectMember={setSelectedMember}
+        onSetCastFilter={handleSetCastFilter}
       />
       <DeathTimeline
         cast={cast}
@@ -34,6 +44,8 @@ export default function MoviePageClient({ stats, cast, releaseYear }: Props) {
         ageFilter={ageFilter}
         onClearAgeFilter={() => setAgeFilter(null)}
         onSelectMember={setSelectedMember}
+        castFilter={castFilter}
+        onSetCastFilter={setCastFilter}
       />
 
       {selectedMember && (

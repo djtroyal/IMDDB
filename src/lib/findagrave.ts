@@ -32,14 +32,13 @@ export async function searchFindAGrave(
   if (deathYear) searchUrl += `&deathyear=${deathYear}&deathyearfilter=5`;
 
   const searchHtml = await fetchHtml(searchUrl);
-  if (!searchHtml) return { cause_of_death: null, resting_place: null, memorial_url: null };
+  if (!searchHtml) return { cause_of_death: null, resting_place: null, bio: null, memorial_url: null };
 
   const $ = cheerio.load(searchHtml);
 
   // Find first memorial link
   let memorialPath: string | null = null;
 
-  // Try multiple selectors for search results
   $("a[href]").each((_, el) => {
     const href = $(el).attr("href") ?? "";
     if (!memorialPath && /^\/memorial\/\d+/.test(href)) {
@@ -48,29 +47,34 @@ export async function searchFindAGrave(
   });
 
   if (!memorialPath) {
-    return { cause_of_death: null, resting_place: null, memorial_url: null };
+    return { cause_of_death: null, resting_place: null, bio: null, memorial_url: null };
   }
 
   const memorialUrl = `https://www.findagrave.com${memorialPath}`;
   const memorialHtml = await fetchHtml(memorialUrl);
-  if (!memorialHtml) return { cause_of_death: null, resting_place: null, memorial_url: memorialUrl };
+  if (!memorialHtml) return { cause_of_death: null, resting_place: null, bio: null, memorial_url: memorialUrl };
 
   const $m = cheerio.load(memorialHtml);
 
-  // Extract cause of death — look in bio section
-  let cause_of_death: string | null = null;
+  // Extract full bio text
+  let bio: string | null = null;
   const bioSelectors = ["#fullBio", "#bio-section", ".memorial-bio", "[id*='bio']"];
   for (const sel of bioSelectors) {
     const text = $m(sel).text().trim();
-    if (text) {
-      // Try to find "cause of death" pattern
-      const match = text.match(/(?:died|death|cause[:\s]+|passed away[^.]*?(?:from|of|due to)[^.]*?)([^.]{5,100})/i);
-      if (match) {
-        cause_of_death = match[0].trim().slice(0, 200);
-      } else if (text.length > 10 && text.length < 500) {
-        cause_of_death = text.slice(0, 300);
-      }
+    if (text && text.length > 10) {
+      bio = text.slice(0, 1000);
       break;
+    }
+  }
+
+  // Extract cause of death from bio
+  let cause_of_death: string | null = null;
+  if (bio) {
+    const match = bio.match(/(?:died|death|cause[:\s]+|passed away[^.]*?(?:from|of|due to)[^.]*?)([^.]{5,100})/i);
+    if (match) {
+      cause_of_death = match[0].trim().slice(0, 200);
+    } else if (bio.length > 10 && bio.length < 500) {
+      cause_of_death = bio.slice(0, 300);
     }
   }
 
@@ -86,12 +90,11 @@ export async function searchFindAGrave(
   for (const sel of cemeterySelectors) {
     const el = $m(sel).first();
     if (el.length) {
-      const name = el.text().trim();
-      if (name) {
-        // Try to get location too
+      const cName = el.text().trim();
+      if (cName) {
         const locationEl = $m("#cemeteryCity, #cemeteryLocation, .cemetery-location").first();
         const location = locationEl.text().trim();
-        resting_place = location ? `${name}, ${location}` : name;
+        resting_place = location ? `${cName}, ${location}` : cName;
         break;
       }
     }
@@ -109,6 +112,7 @@ export async function searchFindAGrave(
   return {
     cause_of_death,
     resting_place,
+    bio,
     memorial_url: memorialUrl,
   };
 }

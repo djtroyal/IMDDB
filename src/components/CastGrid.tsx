@@ -2,24 +2,35 @@
 import { useState } from "react";
 import { CastMember } from "@/types";
 import CastMemberCard from "./CastMemberCard";
-import CastDetailModal from "./CastDetailModal";
-import { Users, Skull, Heart } from "lucide-react";
+import { Users, Skull, Heart, X } from "lucide-react";
 
 interface Props {
   cast: CastMember[];
+  ageFilter: { min: number; max: number } | null;
+  onClearAgeFilter: () => void;
+  onSelectMember: (member: CastMember) => void;
 }
 
 type Filter = "all" | "deceased" | "living";
 
-export default function CastGrid({ cast }: Props) {
-  const [selected, setSelected] = useState<CastMember | null>(null);
+export default function CastGrid({ cast, ageFilter, onClearAgeFilter, onSelectMember }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const deceased = cast.filter((m) => m.deathday);
   const living = cast.filter((m) => !m.deathday);
 
-  const visible =
+  let visible =
     filter === "all" ? cast : filter === "deceased" ? deceased : living;
+
+  // Apply age-at-death filter from histogram
+  if (ageFilter) {
+    visible = visible.filter(
+      (m) =>
+        m.age_at_death !== null &&
+        m.age_at_death >= ageFilter.min &&
+        m.age_at_death <= ageFilter.max
+    );
+  }
 
   const filters: { id: Filter; label: string; icon: React.ReactNode; count: number }[] = [
     { id: "all", label: "All", icon: <Users size={13} />, count: cast.length },
@@ -35,23 +46,36 @@ export default function CastGrid({ cast }: Props) {
           On-Screen Cast
         </h2>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 bg-cinema-800 rounded-lg p-1">
-          {filters.map((f) => (
+        <div className="flex items-center gap-2">
+          {/* Age filter badge */}
+          {ageFilter && (
             <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                filter === f.id
-                  ? "bg-gold-500/20 text-gold-400 border border-gold-500/30"
-                  : "text-white/40 hover:text-white/60"
-              }`}
+              onClick={onClearAgeFilter}
+              className="flex items-center gap-1.5 text-xs text-gold-400 bg-gold-500/10 border border-gold-500/30 rounded-full px-3 py-1.5 hover:bg-gold-500/20 transition-colors"
             >
-              {f.icon}
-              {f.label}
-              <span className="text-[10px] opacity-60">{f.count}</span>
+              Age {ageFilter.min}–{ageFilter.max === 999 ? "90+" : ageFilter.max}
+              <X size={11} />
             </button>
-          ))}
+          )}
+
+          {/* Filter tabs */}
+          <div className="flex gap-1 bg-cinema-800 rounded-lg p-1">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  filter === f.id
+                    ? "bg-gold-500/20 text-gold-400 border border-gold-500/30"
+                    : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                {f.icon}
+                {f.label}
+                <span className="text-[10px] opacity-60">{f.count}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -60,19 +84,17 @@ export default function CastGrid({ cast }: Props) {
           <CastMemberCard
             key={member.id}
             member={member}
-            onClick={() => setSelected(member)}
+            onClick={() => onSelectMember(member)}
           />
         ))}
       </div>
 
       {visible.length === 0 && (
         <div className="glass-card rounded-xl p-8 text-center text-white/30 text-sm">
-          No cast members in this category.
+          {ageFilter
+            ? "No cast members died in this age range."
+            : "No cast members in this category."}
         </div>
-      )}
-
-      {selected && (
-        <CastDetailModal member={selected} onClose={() => setSelected(null)} />
       )}
     </section>
   );

@@ -5,9 +5,7 @@ import { ArrowLeft, Star, Calendar } from "lucide-react";
 import { getMovieDetails, getCastWithDetails } from "@/lib/tmdb";
 import { calculateStats } from "@/lib/statistics";
 import Header from "@/components/Header";
-import StatsPanel from "@/components/StatsPanel";
-import DeathTimeline from "@/components/DeathTimeline";
-import CastGrid from "@/components/CastGrid";
+import MoviePageClient from "@/components/MoviePageClient";
 
 interface PageProps {
   params: { id: string };
@@ -131,9 +129,7 @@ export default async function MoviePage({ params }: PageProps) {
 
       {/* Main content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full space-y-12">
-        <StatsPanel stats={stats} cast={cast} />
-        <DeathTimeline cast={cast} releaseYear={releaseYear} />
-        <CastGrid cast={cast} />
+        <MoviePageClient stats={stats} cast={cast} releaseYear={releaseYear} />
       </main>
 
       <footer className="border-t border-white/5 py-6 text-center text-white/25 text-xs">

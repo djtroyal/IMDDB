@@ -16,6 +16,8 @@ import {
 interface Props {
   stats: MovieStats;
   cast: CastMember[];
+  onSelectAgeRange: (range: { min: number; max: number } | null) => void;
+  selectedAgeRange: { min: number; max: number } | null;
 }
 
 function formatDate(dateStr: string) {
@@ -23,7 +25,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-export default function StatsPanel({ stats, cast }: Props) {
+export default function StatsPanel({ stats, cast, onSelectAgeRange, selectedAgeRange }: Props) {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-bold text-white/80 flex items-center gap-2">
@@ -111,7 +113,11 @@ export default function StatsPanel({ stats, cast }: Props) {
       </div>
 
       {/* Age distribution chart */}
-      <AgeDistributionChart cast={cast} />
+      <AgeDistributionChart
+        cast={cast}
+        onSelectAgeRange={onSelectAgeRange}
+        selectedAgeRange={selectedAgeRange}
+      />
     </section>
   );
 }

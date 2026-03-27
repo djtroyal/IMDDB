@@ -1,0 +1,79 @@
+"use client";
+import { useState } from "react";
+import { CastMember } from "@/types";
+import CastMemberCard from "./CastMemberCard";
+import CastDetailModal from "./CastDetailModal";
+import { Users, Skull, Heart } from "lucide-react";
+
+interface Props {
+  cast: CastMember[];
+}
+
+type Filter = "all" | "deceased" | "living";
+
+export default function CastGrid({ cast }: Props) {
+  const [selected, setSelected] = useState<CastMember | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const deceased = cast.filter((m) => m.deathday);
+  const living = cast.filter((m) => !m.deathday);
+
+  const visible =
+    filter === "all" ? cast : filter === "deceased" ? deceased : living;
+
+  const filters: { id: Filter; label: string; icon: React.ReactNode; count: number }[] = [
+    { id: "all", label: "All", icon: <Users size={13} />, count: cast.length },
+    { id: "deceased", label: "Deceased", icon: <Skull size={13} />, count: deceased.length },
+    { id: "living", label: "Living", icon: <Heart size={13} />, count: living.length },
+  ];
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 className="text-lg font-bold text-white/80 flex items-center gap-2">
+          <Users size={18} className="text-gold-400" />
+          On-Screen Cast
+        </h2>
+
+        {/* Filter tabs */}
+        <div className="flex gap-1 bg-cinema-800 rounded-lg p-1">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                filter === f.id
+                  ? "bg-gold-500/20 text-gold-400 border border-gold-500/30"
+                  : "text-white/40 hover:text-white/60"
+              }`}
+            >
+              {f.icon}
+              {f.label}
+              <span className="text-[10px] opacity-60">{f.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+        {visible.map((member) => (
+          <CastMemberCard
+            key={member.id}
+            member={member}
+            onClick={() => setSelected(member)}
+          />
+        ))}
+      </div>
+
+      {visible.length === 0 && (
+        <div className="glass-card rounded-xl p-8 text-center text-white/30 text-sm">
+          No cast members in this category.
+        </div>
+      )}
+
+      {selected && (
+        <CastDetailModal member={selected} onClose={() => setSelected(null)} />
+      )}
+    </section>
+  );
+}

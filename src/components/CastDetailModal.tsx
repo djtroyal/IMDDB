@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, MapPin, ExternalLink, User } from "lucide-react";
-import { CastMember, FindAGraveResult } from "@/types";
+import { X, MapPin, ExternalLink, BookOpen, User } from "lucide-react";
+import { CastMember, DeathDetails } from "@/types";
 import LoadingSpinner from "./LoadingSpinner";
 
 interface Props {
@@ -15,24 +15,30 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+function sourceLabel(source: string | null) {
+  if (source === "wikipedia") return "via Wikipedia";
+  if (source === "findagrave") return "via Find a Grave";
+  return null;
+}
+
 export default function CastDetailModal({ member, onClose }: Props) {
-  const [graveData, setGraveData] = useState<FindAGraveResult | null>(null);
-  const [graveLoading, setGraveLoading] = useState(false);
+  const [details, setDetails] = useState<DeathDetails | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!member.deathday) return;
-    setGraveLoading(true);
+    setLoading(true);
     const birthYear = member.birthday ? new Date(member.birthday).getFullYear() : null;
     const deathYear = new Date(member.deathday).getFullYear();
     const params = new URLSearchParams({ name: member.name });
     if (birthYear) params.set("birthYear", String(birthYear));
     params.set("deathYear", String(deathYear));
 
-    fetch(`/api/findagrave?${params}`)
+    fetch(`/api/deathdetails?${params}`)
       .then((r) => r.json())
-      .then((d: FindAGraveResult) => setGraveData(d))
-      .catch(() => setGraveData(null))
-      .finally(() => setGraveLoading(false));
+      .then((d: DeathDetails) => setDetails(d))
+      .catch(() => setDetails(null))
+      .finally(() => setLoading(false));
   }, [member]);
 
   const photo = member.profile_path
@@ -118,7 +124,7 @@ export default function CastDetailModal({ member, onClose }: Props) {
 
         {/* Body */}
         <div className="p-5 space-y-4">
-          {/* Biography */}
+          {/* Biography from TMDB */}
           {member.biography && (
             <div>
               <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
@@ -130,64 +136,104 @@ export default function CastDetailModal({ member, onClose }: Props) {
             </div>
           )}
 
-          {/* Find a Grave section (deceased only) */}
+          {/* Death details section (deceased only) */}
           {isDeceased && (
             <div>
               <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
-                Find a Grave
+                Death Details
               </h3>
 
-              {graveLoading ? (
+              {loading ? (
                 <div className="flex items-center gap-3 text-white/40 text-sm">
                   <LoadingSpinner size={16} />
-                  Searching Find a Grave…
+                  Searching Wikipedia &amp; Find a Grave…
                 </div>
-              ) : graveData ? (
+              ) : details ? (
                 <div className="space-y-3">
-                  {graveData.cause_of_death && (
+                  {details.cause_of_death && (
                     <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-4">
-                      <div className="text-xs text-red-400/70 uppercase tracking-wider mb-1.5">
-                        Cause of Death
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-xs text-red-400/70 uppercase tracking-wider">
+                          Cause of Death
+                        </span>
+                        {details.cause_source && (
+                          <span className="text-[10px] text-white/25 bg-white/5 rounded px-1.5 py-0.5">
+                            {sourceLabel(details.cause_source)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-white/80 leading-relaxed">
-                        {graveData.cause_of_death}
+                        {details.cause_of_death}
                       </p>
                     </div>
                   )}
 
-                  {graveData.resting_place && (
+                  {details.resting_place && (
                     <div className="bg-cinema-800 rounded-xl p-4 flex items-start gap-3">
                       <MapPin size={14} className="text-gold-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
-                          Final Resting Place
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-white/40 uppercase tracking-wider">
+                            Final Resting Place
+                          </span>
+                          {details.resting_source && (
+                            <span className="text-[10px] text-white/25 bg-white/5 rounded px-1.5 py-0.5">
+                              {sourceLabel(details.resting_source)}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-sm text-white/80">{graveData.resting_place}</p>
+                        <p className="text-sm text-white/80">{details.resting_place}</p>
                       </div>
                     </div>
                   )}
 
-                  {graveData.memorial_url && (
-                    <a
-                      href={graveData.memorial_url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="flex items-center gap-2 text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                    >
-                      <ExternalLink size={13} />
-                      View on Find a Grave
-                    </a>
+                  {/* Find a Grave bio (supplementary to TMDB biography) */}
+                  {details.bio && (
+                    <div>
+                      <h4 className="text-xs text-white/30 uppercase tracking-wider mb-1.5">
+                        Find a Grave Bio
+                      </h4>
+                      <p className="text-sm text-white/50 leading-relaxed line-clamp-4">
+                        {details.bio}
+                      </p>
+                    </div>
                   )}
 
-                  {!graveData.cause_of_death && !graveData.resting_place && !graveData.memorial_url && (
+                  {/* Source links */}
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    {details.wikipedia_url && (
+                      <a
+                        href={details.wikipedia_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        <BookOpen size={13} />
+                        View on Wikipedia
+                      </a>
+                    )}
+                    {details.memorial_url && (
+                      <a
+                        href={details.memorial_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="flex items-center gap-2 text-sm text-gold-400 hover:text-gold-300 transition-colors"
+                      >
+                        <ExternalLink size={13} />
+                        View on Find a Grave
+                      </a>
+                    )}
+                  </div>
+
+                  {!details.cause_of_death && !details.resting_place && !details.memorial_url && !details.wikipedia_url && (
                     <div className="text-sm text-white/30 italic">
-                      No memorial found on Find a Grave.
+                      No details found on Wikipedia or Find a Grave.
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="text-sm text-white/30 italic">
-                  Could not retrieve Find a Grave data.
+                  Could not retrieve death details.
                 </div>
               )}
             </div>

@@ -1,3 +1,13 @@
+export interface DeathDetails {
+  cause_of_death: string | null;
+  resting_place: string | null;
+  cause_source: "wikipedia" | "findagrave" | null;
+  resting_source: "wikipedia" | "findagrave" | null;
+  bio: string | null;
+  memorial_url: string | null;
+  wikipedia_url: string | null;
+}
+
 export interface Movie {
   id: number;
   title: string;
@@ -24,6 +34,7 @@ export interface CastMember {
 export interface FindAGraveResult {
   cause_of_death: string | null;
   resting_place: string | null;
+  bio: string | null;
   memorial_url: string | null;
   error?: string;
 }

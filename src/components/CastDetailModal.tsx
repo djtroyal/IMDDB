@@ -24,7 +24,9 @@ function sourceLabel(source: string | null) {
 export default function CastDetailModal({ member, onClose }: Props) {
   const [details, setDetails] = useState<DeathDetails | null>(null);
   const [loading, setLoading] = useState(false);
+  const [biography, setBiography] = useState<string | null>(member.biography);
 
+  // Fetch death details for deceased members
   useEffect(() => {
     if (!member.deathday) return;
     setLoading(true);
@@ -39,6 +41,15 @@ export default function CastDetailModal({ member, onClose }: Props) {
       .then((d: DeathDetails) => setDetails(d))
       .catch(() => setDetails(null))
       .finally(() => setLoading(false));
+  }, [member]);
+
+  // Lazy-load biography from TMDB if not already present
+  useEffect(() => {
+    if (member.biography) { setBiography(member.biography); return; }
+    fetch(`/api/person/${member.id}`)
+      .then((r) => r.json())
+      .then((d) => setBiography(d.biography ?? null))
+      .catch(() => {});
   }, [member]);
 
   const photo = member.profile_path
@@ -124,14 +135,14 @@ export default function CastDetailModal({ member, onClose }: Props) {
 
         {/* Body */}
         <div className="p-5 space-y-4">
-          {/* Biography from TMDB */}
-          {member.biography && (
+          {/* Biography from TMDB (lazy-loaded) */}
+          {biography && (
             <div>
               <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
                 Biography
               </h3>
               <p className="text-sm text-white/60 leading-relaxed line-clamp-4">
-                {member.biography}
+                {biography}
               </p>
             </div>
           )}

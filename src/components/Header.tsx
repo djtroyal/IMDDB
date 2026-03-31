@@ -15,7 +15,7 @@ export default function Header() {
           </span>
         </Link>
         <span className="text-white/30 text-sm hidden sm:block">
-          Internet Movie Death Database
+          Internet Movie Deadabase
         </span>
       </div>
     </header>

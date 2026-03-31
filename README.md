@@ -1,4 +1,4 @@
-# IMDDB — Internet Movie Death Database
+# IMDDB — Internet Movie Deadabase
 
 A visually rich, interactive web application for exploring the mortality statistics of on-screen cast members for any movie.
 

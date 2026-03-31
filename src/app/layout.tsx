@@ -14,7 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "IMDDB — Internet Movie Death Database",
+  title: "IMDDB — Internet Movie Deadabase",
   description:
     "Explore death statistics and timelines for movie cast members. Powered by TMDB and Find a Grave.",
 };

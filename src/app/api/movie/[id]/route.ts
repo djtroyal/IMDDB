@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMovieDetails, getCastWithDetails } from "@/lib/tmdb";
-import { calculateStats } from "@/lib/statistics";
+import { getMovieDetails, getRawCast } from "@/lib/tmdb";
 
 export async function GET(
   _req: NextRequest,
@@ -11,12 +10,11 @@ export async function GET(
     return NextResponse.json({ error: "Invalid movie ID" }, { status: 400 });
   }
   try {
-    const [movie, cast] = await Promise.all([
+    const [movie, rawCast] = await Promise.all([
       getMovieDetails(movieId),
-      getCastWithDetails(movieId),
+      getRawCast(movieId),
     ]);
-    const stats = calculateStats(cast);
-    return NextResponse.json({ movie, cast, stats });
+    return NextResponse.json({ movie, castCount: rawCast.length });
   } catch (err) {
     console.error("Movie fetch error:", err);
     return NextResponse.json({ error: "Failed to fetch movie data" }, { status: 500 });

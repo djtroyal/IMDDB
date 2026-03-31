@@ -18,7 +18,24 @@ export async function getMovieDetails(movieId: number): Promise<Movie> {
   return res.json();
 }
 
-async function getPersonDetails(personId: number): Promise<{
+export interface RawCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order: number;
+}
+
+/** Fast: single API call, returns basic cast info without birth/death details */
+export async function getRawCast(movieId: number): Promise<RawCastMember[]> {
+  const url = `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=credits&language=en-US`;
+  const res = await fetch(url, { next: { revalidate: 3600 } });
+  if (!res.ok) throw new Error(`TMDB credits failed: ${res.status}`);
+  const data = await res.json();
+  return data.credits?.cast ?? [];
+}
+
+export async function getPersonDetails(personId: number): Promise<{
   birthday: string | null;
   deathday: string | null;
 }> {
@@ -40,7 +57,7 @@ export async function getPersonBiography(personId: number): Promise<string | nul
   return data.biography ?? null;
 }
 
-function calcAgeAtDeath(birthday: string, deathday: string): number {
+export function calcAgeAtDeath(birthday: string, deathday: string): number {
   const birth = new Date(birthday);
   const death = new Date(deathday);
   let age = death.getFullYear() - birth.getFullYear();
@@ -49,7 +66,7 @@ function calcAgeAtDeath(birthday: string, deathday: string): number {
   return age;
 }
 
-function calcCurrentAge(birthday: string): number {
+export function calcCurrentAge(birthday: string): number {
   const birth = new Date(birthday);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
@@ -58,30 +75,13 @@ function calcCurrentAge(birthday: string): number {
   return age;
 }
 
-// Max cast members to fetch details for (avoids huge request counts for ensemble films)
-const MAX_CAST = 50;
-
-export async function getCastWithDetails(movieId: number): Promise<CastMember[]> {
-  const url = `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=credits&language=en-US`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error(`TMDB credits failed: ${res.status}`);
-  const data = await res.json();
-
-  // Cast only — no crew. Cap at MAX_CAST to limit API calls.
-  const rawCast: Array<{
-    id: number;
-    name: string;
-    character: string;
-    profile_path: string | null;
-    order: number;
-  }> = (data.credits?.cast ?? []).slice(0, MAX_CAST);
-
-  // Fire ALL person detail requests in parallel (TMDB allows 40 req/s)
+/** Enrich a batch of raw cast with person details. Fetches all in parallel. */
+export async function enrichCastBatch(raw: RawCastMember[]): Promise<CastMember[]> {
   const allDetails = await Promise.all(
-    rawCast.map((m) => getPersonDetails(m.id))
+    raw.map((m) => getPersonDetails(m.id))
   );
 
-  return rawCast.map((m, i) => {
+  return raw.map((m, i) => {
     const d = allDetails[i];
     const age_at_death =
       d.birthday && d.deathday ? calcAgeAtDeath(d.birthday, d.deathday) : null;
@@ -97,7 +97,7 @@ export async function getCastWithDetails(movieId: number): Promise<CastMember[]>
       deathday: d.deathday,
       age_at_death,
       current_age,
-      biography: null, // loaded lazily in the modal
+      biography: null,
     };
   });
 }

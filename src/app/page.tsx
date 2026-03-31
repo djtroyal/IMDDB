@@ -34,10 +34,10 @@ export default function HomePage() {
               <span className="gold-text">IMDDB</span>
             </h1>
             <p className="text-lg sm:text-xl text-white/60 mb-3 font-light">
-              Internet Movie Death Database
+              Internet Movie Deadabase
             </p>
             <p className="text-white/40 max-w-lg mx-auto mb-12 text-sm">
-              Search any movie to explore cast mortality statistics, interactive death timelines,
+              Search any movie to explore cast mortality, interactive death timelines,
               causes of death, and final resting places.
             </p>
 

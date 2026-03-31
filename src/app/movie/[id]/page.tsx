@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Star, Calendar } from "lucide-react";
-import { getMovieDetails, getCastWithDetails } from "@/lib/tmdb";
-import { calculateStats } from "@/lib/statistics";
+import { getMovieDetails, getRawCast } from "@/lib/tmdb";
 import Header from "@/components/Header";
 import MoviePageClient from "@/components/MoviePageClient";
 
@@ -15,11 +14,11 @@ export async function generateMetadata({ params }: PageProps) {
   try {
     const movie = await getMovieDetails(parseInt(params.id, 10));
     return {
-      title: `${movie.title} — IMDDB`,
+      title: `${movie.title} — IMDDB: Internet Movie Deadabase`,
       description: `Cast mortality statistics and death timeline for ${movie.title}`,
     };
   } catch {
-    return { title: "Movie — IMDDB" };
+    return { title: "Movie — IMDDB: Internet Movie Deadabase" };
   }
 }
 
@@ -27,17 +26,17 @@ export default async function MoviePage({ params }: PageProps) {
   const movieId = parseInt(params.id, 10);
   if (isNaN(movieId)) notFound();
 
-  let movie, cast;
+  let movie, rawCast;
   try {
-    [movie, cast] = await Promise.all([
+    // Just 2 API calls (movie details reuses credits call via getRawCast)
+    [movie, rawCast] = await Promise.all([
       getMovieDetails(movieId),
-      getCastWithDetails(movieId),
+      getRawCast(movieId),
     ]);
   } catch {
     notFound();
   }
 
-  const stats = calculateStats(cast);
   const releaseYear = movie.release_date
     ? parseInt(movie.release_date.slice(0, 4), 10)
     : new Date().getFullYear();
@@ -53,7 +52,7 @@ export default async function MoviePage({ params }: PageProps) {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Movie hero with backdrop */}
+      {/* Movie hero with backdrop — renders immediately */}
       <section className="relative">
         {backdropUrl && (
           <div className="absolute inset-0 overflow-hidden">
@@ -79,7 +78,6 @@ export default async function MoviePage({ params }: PageProps) {
           </Link>
 
           <div className="flex gap-6 items-start">
-            {/* Poster */}
             {posterUrl && (
               <div className="hidden sm:block w-32 md:w-44 flex-shrink-0 rounded-xl overflow-hidden shadow-2xl relative aspect-[2/3]">
                 <Image
@@ -92,7 +90,6 @@ export default async function MoviePage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <h1 className="text-3xl sm:text-4xl font-bold text-white/95 leading-tight">
                 {movie.title}
@@ -112,8 +109,7 @@ export default async function MoviePage({ params }: PageProps) {
                   </div>
                 )}
                 <div className="text-white/30">
-                  {stats.deceased_count} of {stats.total_cast} cast deceased (
-                  {stats.percent_deceased}%)
+                  {rawCast.length} cast members
                 </div>
               </div>
 
@@ -127,9 +123,13 @@ export default async function MoviePage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* Main content */}
+      {/* Main content — progressively loaded */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full space-y-12">
-        <MoviePageClient stats={stats} cast={cast} releaseYear={releaseYear} />
+        <MoviePageClient
+          movieId={movieId}
+          totalCast={rawCast.length}
+          releaseYear={releaseYear}
+        />
       </main>
 
       <footer className="border-t border-white/5 py-6 text-center text-white/25 text-xs">
@@ -137,7 +137,7 @@ export default async function MoviePage({ params }: PageProps) {
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="hover:text-gold-400 transition-colors">
           TMDB
         </a>{" "}
-        and{" "}
+        &amp;{" "}
         <a href="https://www.findagrave.com" target="_blank" rel="noreferrer" className="hover:text-gold-400 transition-colors">
           Find a Grave
         </a>

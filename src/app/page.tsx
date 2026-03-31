@@ -4,9 +4,9 @@ import { Skull, TrendingUp, Clock, MapPin } from "lucide-react";
 
 const FEATURED = [
   { title: "The Wizard of Oz", id: 630 },
-  { title: "Casablanca", id: 492 },
+  { title: "Casablanca", id: 289 },
   { title: "Gone with the Wind", id: 770 },
-  { title: "Apocalypse Now", id: 11252 },
+  { title: "Apocalypse Now", id: 28 },
   { title: "The Godfather", id: 238 },
   { title: "Psycho", id: 539 },
 ];
